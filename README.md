@@ -2,6 +2,10 @@
 
 A simple procedural map generator and pathfinding experiment built in HTML5 and Javascript.
 
+# Live Demo
+
+https://matthewlynch.net/projects/crawler/
+
 # COPYRIGHT / LICENSE
 
 Code in this project is released under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
