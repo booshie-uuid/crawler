@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Crawler - Procedural Map Generator & Pathfinding</title>
+
+<meta name="description" content="A simple procedural map generator and pathfinding experiment built in HTML5 and Javascript.">
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+<script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="Mathemagician.js"></script>
+<script type="text/javascript" src="MapEngine.js"></script>
+<script type="text/javascript" src="MapDrawer.js"></script>
+<script type="text/javascript" src="PathFinder.js"></script>
+
+</head>
+
+<body>
+
+<canvas id='canvas'></canvas>
+
+<script type="text/javascript">
+
+var Dungeon = {
+
+	map: null,
+	
+	gridWidth: 128,
+	gridHeight: 64,
+	
+	playerX: 0,
+	playerY: 0,
+	
+	mouseX: 0,
+	mouseY: 0,
+	
+	currentPath: null
+
+};
+
+var blobSprite = new Image();
+var blobSpriteReady = false;
+
+blobSprite.src = "blob.png";
+blobSprite.onload = function()
+{ 
+	blobSpriteReady = true; 
+};
+
+function gameInit()
+{
+	var mapEngine = Crawler.MapEngine;
+
+	Dungeon.map = mapEngine.createBlankMap(Dungeon.gridWidth, Dungeon.gridHeight);
+
+	mapEngine.addRooms(Dungeon.map, 10, 25, 5, 5, 25, 25);
+	mapEngine.addPaths(Dungeon.map);
+	mapEngine.addWalls(Dungeon.map);
+
+	Crawler.MapDrawer.setTilesheet("tilesheet-map.png");
+
+	Crawler.MapDrawer.setCanvas("canvas", 800, 600);
+	
+	// Find a spot for the player.
+	
+	var playerPositioned = false;
+	
+	for (var y = 0; y < Dungeon.map.gridHeight; y++)
+	{
+		for (var x = 0; x < Dungeon.map.gridWidth; x++)
+		{
+			var cell = Dungeon.map.grid[x][y];
+			
+			if(cell == 1)
+			{
+				Dungeon.playerX = x;
+				Dungeon.playerY = y;
+				
+				playerPositioned = true;
+				
+				break;
+			}
+		}
+		
+		if(playerPositioned)
+		{
+			break;
+		}
+	}
+	
+	$("#canvas").mousemove(function (e)
+	{
+		Dungeon.mouseX = e.pageX - $(this).offset().left;
+		Dungeon.mouseY = e.pageY - $(this).offset().top;
+    });
+    
+    $("#canvas").click(function (e)
+	{
+		Dungeon.mouseX = e.pageX - $(this).offset().left;
+		Dungeon.mouseY = e.pageY - $(this).offset().top;
+		
+		var mathemagician = Conjecture.Mathemagician;
+
+		var offsetX = Dungeon.playerX * 32 - mathemagician.truncate(Crawler.MapDrawer.width / 2);
+		var offsetY = Dungeon.playerY * 32 - mathemagician.truncate(Crawler.MapDrawer.height / 2);
+	
+		var mouseCellX = Math.floor((Dungeon.mouseX + offsetX) / 32);
+		var mouseCellY = Math.floor((Dungeon.mouseY + offsetY) / 32);
+		
+		Dungeon.currentPath = Crawler.PathFinder.calculatePath(Dungeon.map.grid, Dungeon.playerX, Dungeon.playerY, mouseCellX, mouseCellY);
+		Dungeon.currentPath.shift(); // remove starting node;
+    });
+	
+	// Enter Game Loop
+	gameLoop();	
+	
+}
+
+function gameLoop()
+{	
+	// Blank canvas.
+	
+	Crawler.MapDrawer.blankCanvas();
+	
+	// Draw map (floor, walls, etc.)
+	Crawler.MapDrawer.drawMap(Dungeon.map, Dungeon.playerX, Dungeon.playerY);
+	
+	
+	// Draw path markers.
+	if(blobSpriteReady && Dungeon.currentPath != null)
+	{
+		for(i = 0; i < Dungeon.currentPath.length; i++)
+		{
+			var pathNode = Dungeon.currentPath[i];
+			
+			Crawler.MapDrawer.drawSprite(blobSprite, 32, 32, 2, 0, pathNode.gridX, pathNode.gridY, Dungeon.playerX, Dungeon.playerY);
+		}
+		
+		var nextPathNode = Dungeon.currentPath.shift();
+		
+		if(nextPathNode != null)
+		{
+			Dungeon.playerX = nextPathNode.gridX;
+			Dungeon.playerY = nextPathNode.gridY;
+		}
+	
+	}
+	
+	// Draw character.
+	if(blobSpriteReady)
+	{
+		Crawler.MapDrawer.drawSprite(blobSprite, 32, 32, 0, 0, Dungeon.playerX, Dungeon.playerY, Dungeon.playerX, Dungeon.playerY);
+	}
+	
+	// Draw mouse box.
+	var mathemagician = Conjecture.Mathemagician;
+
+	var offsetX = Dungeon.playerX * 32 - mathemagician.truncate(Crawler.MapDrawer.width / 2);
+	var offsetY = Dungeon.playerY * 32 - mathemagician.truncate(Crawler.MapDrawer.height / 2);
+	
+	var mouseCellX = Math.floor((Dungeon.mouseX + offsetX) / 32);
+	var mouseCellY = Math.floor((Dungeon.mouseY + offsetY) / 32);
+	
+	if(blobSpriteReady)
+	{
+		Crawler.MapDrawer.drawSprite(blobSprite, 32, 32, 1, 0, mouseCellX, mouseCellY, Dungeon.playerX, Dungeon.playerY);
+	}
+	
+	// Continue game loop.
+	setTimeout(gameLoop, 32);
+}
+
+gameInit();
+
+
+</script>
+
+</body>
+
+</html>
