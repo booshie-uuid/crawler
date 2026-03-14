@@ -1,8 +1,8 @@
-# Crawler
+# CRAWLER
 
 A simple procedural map generator and pathfinding experiment built in HTML5 and Javascript.
 
-# Live Demo
+# LIVE DEMO
 
 https://matthewlynch.net/projects/crawler/
 
